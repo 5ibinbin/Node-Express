@@ -2,6 +2,7 @@ var express = require('express');
 var superagent = require('superagent');
 var cheerio = require('cheerio');
 var eventproxy = require('eventproxy');
+var async = require('async');
 var router = express.Router();
 
 var User = require("../db/poem_option");
@@ -23,7 +24,7 @@ router.get('/poem/list', function (req, res, next) {
             var shangxi = [];
             $('.left .sons').each(function (index, element) {
                 var $element = $(element);
-                items.push( {
+                items.push({
                     id: $element.find('.toolerweima').attr('id').slice(6),
                     title: $element.find('p > a > b').text(),
                     dynasty: $element.find('.source > a').first().text(),
@@ -36,34 +37,26 @@ router.get('/poem/list', function (req, res, next) {
             $('.main3 .sons .cont .yizhu').map(function (index, element) {
                 var $element = $(element);
                 console.log($element.find('img').attr('id').slice(10));
-                // shangxi.push('https://www.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=' + $element.find('img').attr('id').slice(10) + '&value=shang');
-                shangxi.push('https://www.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id='+ $element.find('img').attr('id').slice(10) +'&value=shang');
+                shangxi.push('https://www.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=' + $element.find('img').attr('id').slice(10) + '&value=shang');
             });
-            var ep = new eventproxy();
-            var obj = {};
-            console.log(shangxi);
-            //循环遍历
-            shangxi.forEach(function (item) {
-                superagent.get(item)
-                    .end(function (err, res) {
-                        ep.emit('shangxi', res.text);
+
+            async.mapLimit(shangxi, 10, function (url, callback) {
+                superagent.get(url)
+                    .end(function (error, response) {
+                        if (error) {
+                            return next(error)
+                        }
+                        var $ = cheerio.load(response.text);
+                        var $element = $(response.text);
+                        callback(null, $element.text());
                     })
-            });
-            // //控制并发
-            ep.after('shangxi', shangxi.length, function (item) {
-                for (var i = 0; i< shangxi.length; i++){
-                    shangxi = item.map(function (page) {
-                        var $ = cheerio.load(page);
-                        var $element = $(page);
-                        obj = {
-                            shangxi: $element.text()
-                        };
-                        return obj;
-                    });
-                    items[i].shangxi = obj.shangxi;
+            }, function (err, result) {
+                for (var i = 0; i < result.length; i++){
+                    items[i].shangxi = result[i]
                 }
                 res.send(items);
             });
+
         });
 });
 
@@ -220,6 +213,7 @@ router.get('/author/detail', function (req, res, next) {
                     recordUrls.push('https://so.gushiwen.org/authors/ajaxziliao.aspx?id=' + $element.attr('id').slice(5))
                 }
             });
+
             var ep = new eventproxy();
             var obj = {};
             //循环遍历
@@ -244,7 +238,6 @@ router.get('/author/detail', function (req, res, next) {
                 items.record = record;
                 res.send(items);
             });
-
         });
 });
 
