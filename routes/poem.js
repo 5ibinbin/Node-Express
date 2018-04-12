@@ -36,8 +36,43 @@ router.get('/poem/list', function (req, res, next) {
             });
             $('.main3 .sons .cont .yizhu').map(function (index, element) {
                 var $element = $(element);
-                console.log($element.find('img').attr('id').slice(10));
-                shangxi.push('https://www.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=' + $element.find('img').attr('id').slice(10) + '&value=shang');
+                var url = 'https://www.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=';
+                var id = $element.find('img').attr('id').slice(10);
+                fanyi.push(url + id + '&value=yi');
+                zhushi.push(url + id + '&value=zhu');
+                shangxi.push(url + id + '&value=shang');
+            });
+
+            async.mapLimit(fanyi, 10, function (url, callback) {
+                superagent.get(url)
+                    .end(function (error, response) {
+                        if (error) {
+                            return next(error)
+                        }
+                        var $ = cheerio.load(response.text);
+                        var $element = $(response.text);
+                        callback(null, $element.text());
+                    })
+            }, function (err, result) {
+                for (var i = 0; i < result.length; i++) {
+                    items[i].fanyi = result[i]
+                }
+            });
+
+            async.mapLimit(zhushi, 10, function (url, callback) {
+                superagent.get(url)
+                    .end(function (error, response) {
+                        if (error) {
+                            return next(error)
+                        }
+                        var $ = cheerio.load(response.text);
+                        var $element = $(response.text);
+                        callback(null, $element.text());
+                    })
+            }, function (err, result) {
+                for (var i = 0; i < result.length; i++) {
+                    items[i].zhushi = result[i]
+                }
             });
 
             async.mapLimit(shangxi, 10, function (url, callback) {
@@ -51,12 +86,11 @@ router.get('/poem/list', function (req, res, next) {
                         callback(null, $element.text());
                     })
             }, function (err, result) {
-                for (var i = 0; i < result.length; i++){
+                for (var i = 0; i < result.length; i++) {
                     items[i].shangxi = result[i]
                 }
                 res.send(items);
             });
-
         });
 });
 
