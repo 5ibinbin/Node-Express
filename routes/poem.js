@@ -51,7 +51,7 @@ router.get('/poem/list', function (req, res, next) {
                         }
                         var $ = cheerio.load(response.text);
                         var $element = $(response.text);
-                        callback(null, $element.text());
+                        callback(null, $('span').text());
                     })
             }, function (err, result) {
                 for (var i = 0; i < result.length; i++) {
@@ -67,7 +67,7 @@ router.get('/poem/list', function (req, res, next) {
                         }
                         var $ = cheerio.load(response.text);
                         var $element = $(response.text);
-                        callback(null, $element.text());
+                        callback(null, $(' span').text());
                     })
             }, function (err, result) {
                 for (var i = 0; i < result.length; i++) {
@@ -83,7 +83,7 @@ router.get('/poem/list', function (req, res, next) {
                         }
                         var $ = cheerio.load(response.text);
                         var $element = $(response.text);
-                        callback(null, $element.text());
+                        callback(null, $('p').text());
                     })
             }, function (err, result) {
                 for (var i = 0; i < result.length; i++) {
