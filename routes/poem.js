@@ -5,7 +5,7 @@ var eventproxy = require('eventproxy');
 var async = require('async');
 var router = express.Router();
 
-var User = require("../db/poem_option");
+var Poem = require("../db/poem_option");
 
 
 /**
@@ -108,13 +108,14 @@ router.get('/poem/type/list', function (req, res, next) {
             var items = [];
             console.log($('.right .sons').first().find('a').length)
             $('.right .sons').first().find('a').each(function (index, element) {
-
                 var $element = $(element);
                 items.push({
-                    url: $element.attr('href'),
                     type: $element.text()
                 })
-            })
+            });
+            for (var i = 0; i< items.length; i++){
+                Poem.insertPoemType(items[i]);
+            }
             res.send(items);
         });
 });
@@ -122,7 +123,6 @@ router.get('/poem/type/list', function (req, res, next) {
  * 作者列表
  * */
 router.get('/poem/author/list', function (req, res, next) {
-
     superagent.get('https://www.gushiwen.org/shiwen/')
         .end(function (err, sres) {
             if (err) {
@@ -131,14 +131,14 @@ router.get('/poem/author/list', function (req, res, next) {
             var $ = cheerio.load(sres.text);
             var items = [];
             console.log($('.right .sons').next().find('a').length)
-            $('.right .sons').next().find('a').each(function (index, element) {
+            $('.right .sons').slice(1,2).find('a').each(function (index, element) {
 
                 var $element = $(element);
                 items.push({
                     url: 'https://www.gushiwen.org' + $element.attr('href'),
                     type: $element.text()
                 })
-            })
+            });
             res.send(items);
         });
 });
@@ -159,10 +159,12 @@ router.get('/poem/dynasty/list', function (req, res, next) {
 
                 var $element = $(element);
                 items.push({
-                    url: 'https://www.gushiwen.org' + $element.attr('href'),
-                    type: $element.text()
+                    dynasty: $element.text()
                 })
-            })
+            });
+            for (var i = 0; i< items.length; i++){
+                Poem.insertDynasty(items[i]);
+            }
             res.send(items);
         });
 });
@@ -171,7 +173,6 @@ router.get('/poem/dynasty/list', function (req, res, next) {
  * 诗歌形式
  * */
 router.get('/poem/form/list', function (req, res, next) {
-
     superagent.get('https://www.gushiwen.org/shiwen/')
         .end(function (err, sres) {
             if (err) {
@@ -183,10 +184,12 @@ router.get('/poem/form/list', function (req, res, next) {
 
                 var $element = $(element);
                 items.push({
-                    url: 'https://www.gushiwen.org' + $element.attr('href'),
                     type: $element.text()
                 })
             })
+            for (var i = 0; i< items.length; i++){
+                Poem.insertPoemForm(items[i]);
+            }
             res.send(items);
         });
 });
@@ -194,7 +197,6 @@ router.get('/poem/form/list', function (req, res, next) {
  * 作者列表
  * */
 router.get('/author/list', function (req, res, next) {
-
     superagent.get('https://so.gushiwen.org/authors/')
         .end(function (err, sres) {
             if (err) {
@@ -209,10 +211,22 @@ router.get('/author/list', function (req, res, next) {
                     img: $element.find('.cont > .divimg > a > img').attr('src'),
                     name: $element.find('p> a >b').text(),
                     desc: $element.find('p').next().text(),
-                    href: $element.find('p > a').attr('href'),
                     star: $element.find('.tool > .good > a > span').text()
                 })
-            })
+            });
+            for (var i = 0; i< items.length; i++){
+                Poem.findAuthorName(items[i], function (res) {
+                    // console.log(res)
+                    // if (res){
+                    //     console.log(1)
+                        Poem.insertAuthor(items[i])
+                    // } else {
+                    //     console.log(2)
+                    //     Poem.updateAuthor(items[i])
+                    // }
+                })
+            }
+
             res.send(items);
         });
 });

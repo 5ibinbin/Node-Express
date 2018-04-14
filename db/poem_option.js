@@ -2,20 +2,16 @@
  * Created by Cral-Gates on 2018/4/1.
  */
 
-var User = require("../db/user");
+var Poem = require("../db/poem");
 /**
- * 插入
+ * 插入朝代
  */
-function insert() {
-    console.log('insert');
-    var user = new User({
-        username: 'Nickyzhang',                 //用户账号
-        pwd: 'nicky',                            //密码
-        age: 20,                                //年龄
-        createDate: new Date()                      //最近登录时间
+function insertDynasty(obj) {
+    var data = new Poem({
+        dynasty: obj.dynasty
     });
 
-    user.save(function (err, res) {
+    data.save(function (err, res) {
         if (err) {
             console.log("Error:" + err);
         } else {
@@ -24,66 +20,94 @@ function insert() {
     });
 }
 
-/*
- * 更新
- * */
+/**
+ * 插入诗歌形式
+ */
+function insertPoemForm(obj) {
+    var form = new Poem({
+        type: obj.type
+    });
 
-function update() {
-    console.log('update');
-    var wherestr = {'username': 'Tracy McGrady'};
-    var updatestr = {'username': '1231212', 'pwd':'tracy'};
-
-    User.update(wherestr, updatestr, function (err, res) {
+    form.save(function (err, res) {
         if (err) {
             console.log("Error:" + err);
         } else {
             console.log("Res:" + res);
         }
-    })
-    db.close();
+    });
+}
+
+/**
+ * 插入诗歌类型
+ */
+function insertPoemType(obj) {
+    var form = new Poem({
+        type: obj.type
+    });
+
+    form.save(function (err, res) {
+        if (err) {
+            console.log("Error:" + err);
+        } else {
+            console.log("Res:" + res);
+        }
+    });
+}
+
+/**
+ * 插入诗人
+ */
+function insertAuthor(obj) {
+    var form = new Poem({
+        img: obj.img,
+        name: obj.name,
+        desc: obj.desc,
+        star: obj.star
+    });
+    form.save(function (err, res) {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log('insert Author success');
+        }
+    });
 }
 
 /**
  * 查找
  * */
-function findByIdAndUpdate(){
-    console.log('find');
-    var id = '5ac0a79625a3ab095f12ad4d';
-    var updatestr = {'pwd': '12345678'};
-
-    User.findByIdAndUpdate(id, updatestr, function(err, res){
+function findAuthorName(obj, callback) {
+    var updateStr = {'name': obj.name};
+    Poem.find(updateStr, function (err, res) {
         if (err) {
-            console.log("Error:" + err);
+            console.log('find Author failure');
+            callback(err);
+        } else {
+            console.log('find Author success');
+            callback(res)
         }
-        else {
-            console.log("Res:" + res);
-        }
-    })
-    db.close();
+    });
 }
 
-/**
- * 删除
+/*
+ * 更新作者
  * */
-function del(){
-    console.log('delete');
-    var wherestr = {'_id' : '5ac0a84eb5893f096ad46e83'};
-
-    User.remove(wherestr, function(err, res){
+function updateAuthor(obj) {
+    var whereStr = {'name': obj.name};
+    Poem.update(whereStr, obj, function (err, res) {
         if (err) {
             console.log("Error:" + err);
+        } else {
+            console.log("update Author success");
         }
-        else {
-            console.log("Res:" + JSON.parse(res));
-        }
-    })
-    db.close();
+    });
 }
 
-// insert();
 module.exports = {
-    insert: insert,
-    update: update,
-    findByIdAndUpdate: findByIdAndUpdate,
-    del:del
-}
+    insertDynasty: insertDynasty,
+    insertPoemForm: insertPoemForm,
+    insertPoemType: insertPoemType,
+    insertAuthor: insertAuthor,
+    findAuthorName: findAuthorName,
+    updateAuthor: updateAuthor
+};

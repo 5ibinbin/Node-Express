@@ -2,7 +2,7 @@
  * Created by Cral-Gates on 2018/4/1.
  */
 var mongoose = require('mongoose'),
-    DB_URL = 'mongodb://localhost:27017/node';
+    DB_URL = 'mongodb://localhost:27017/gushiwen';
 
 /**
  * 连接
