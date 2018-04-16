@@ -103,11 +103,40 @@ function updateAuthor(obj) {
     });
 }
 
+/**
+ * 插入诗歌
+ * */
+function insertPoem(obj) {
+    // console.log(obj)
+    var poem = new Poem({
+        id : obj.id,
+        title : obj.title,
+        dynasty : obj.dynasty,
+        author : obj.author,
+        content: obj.content,
+        tag: obj.tag,
+        star: obj.star,
+        fanyi : obj.fanyi,
+        zhushi : obj.zhushi,
+        shangxi : obj.shangxi
+    });
+    poem.save(function (err, res) {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log('insert Poem success');
+        }
+    });
+}
+
+
+
 module.exports = {
     insertDynasty: insertDynasty,
     insertPoemForm: insertPoemForm,
     insertPoemType: insertPoemType,
     insertAuthor: insertAuthor,
     findAuthorName: findAuthorName,
-    updateAuthor: updateAuthor
+    updateAuthor: updateAuthor,
+    insertPoem: insertPoem
 };

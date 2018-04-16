@@ -12,86 +12,94 @@ var Poem = require("../db/poem_option");
  * 诗歌列表
  * */
 router.get('/poem/list', function (req, res, next) {
-    superagent.get('https://www.gushiwen.org/shiwen/')
-        .end(function (err, sres) {
-            if (err) {
-                return next(err);
-            }
-            var $ = cheerio.load(sres.text);
-            var items = [];
-            var fanyi = [];
-            var zhushi = [];
-            var shangxi = [];
-            $('.left .sons').each(function (index, element) {
-                var $element = $(element);
-                items.push({
-                    id: $element.find('.toolerweima').attr('id').slice(6),
-                    title: $element.find('p > a > b').text(),
-                    dynasty: $element.find('.source > a').first().text(),
-                    author: $element.find('.source > a').last().text(),
-                    content: $element.find('.contson').text(),
-                    tag: $element.find('.tag').text(),
-                    star: $element.find('.tool > .good > a').text()
+    for (var j = 101; j < 401; j++){
+        superagent.get('https://www.gushiwen.org/shiwen')
+            .end(function (err, sres) {
+                if (err) {
+                    return next(err);
+                }
+                var $ = cheerio.load(sres.text);
+                var items = [];
+                var fanyi = [];
+                var zhushi = [];
+                var shangxi = [];
+                $('.left .sons').each(function (index, element) {
+                    var $element = $(element);
+                    items.push({
+                        id: $element.find('.toolerweima').attr('id').slice(6),
+                        title: $element.find('p > a > b').text(),
+                        dynasty: $element.find('.source > a').first().text(),
+                        author: $element.find('.source > a').last().text(),
+                        content: $element.find('.contson').text(),
+                        tag: $element.find('.tag').text(),
+                        star: $element.find('.tool > .good > a').text()
+                    });
+                });
+                $('.main3 .sons .cont .yizhu').map(function (index, element) {
+                    var $element = $(element);
+                    var url = 'https://www.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=';
+                    var id = $element.find('img').attr('id').slice(10);
+                    fanyi.push(url + id + '&value=yi');
+                    zhushi.push(url + id + '&value=zhu');
+                    shangxi.push(url + id + '&value=shang');
+                });
+
+                async.mapLimit(fanyi, 10, function (url, callback) {
+                    superagent.get(url)
+                        .end(function (error, response) {
+                            if (error) {
+                                return next(error)
+                            }
+                            var $ = cheerio.load(response.text);
+                            var $element = $(response.text);
+                            callback(null, $('span').text());
+                        })
+                }, function (err, result) {
+                    for (var i = 0; i < result.length; i++) {
+                        items[i].fanyi = result[i]
+                    }
+                });
+
+                async.mapLimit(zhushi, 10, function (url, callback) {
+                    superagent.get(url)
+                        .end(function (error, response) {
+                            if (error) {
+                                return next(error)
+                            }
+                            var $ = cheerio.load(response.text);
+                            var $element = $(response.text);
+                            callback(null, $(' span').text());
+                        })
+                }, function (err, result) {
+                    for (var i = 0; i < result.length; i++) {
+                        items[i].zhushi = result[i]
+                    }
+                });
+
+                async.mapLimit(shangxi, 10, function (url, callback) {
+                    superagent.get(url)
+                        .end(function (error, response) {
+                            if (error) {
+                                return next(error)
+                            }
+                            var $ = cheerio.load(response.text);
+                            var $element = $(response.text);
+                            callback(null, $('p').text());
+                        })
+                }, function (err, result) {
+                    for (var i = 0; i < result.length; i++) {
+                        items[i].shangxi = result[i]
+                    }
+                    // console.log(items.length)
+                    for(var index = 0; index < items.length; index++){
+                        // console.log(index)
+                        Poem.insertPoem(items[index]);
+                    }
+
+                    // res.send(items);
                 });
             });
-            $('.main3 .sons .cont .yizhu').map(function (index, element) {
-                var $element = $(element);
-                var url = 'https://www.gushiwen.org/shiwen2017/ajaxshiwencont.aspx?id=';
-                var id = $element.find('img').attr('id').slice(10);
-                fanyi.push(url + id + '&value=yi');
-                zhushi.push(url + id + '&value=zhu');
-                shangxi.push(url + id + '&value=shang');
-            });
-
-            async.mapLimit(fanyi, 10, function (url, callback) {
-                superagent.get(url)
-                    .end(function (error, response) {
-                        if (error) {
-                            return next(error)
-                        }
-                        var $ = cheerio.load(response.text);
-                        var $element = $(response.text);
-                        callback(null, $('span').text());
-                    })
-            }, function (err, result) {
-                for (var i = 0; i < result.length; i++) {
-                    items[i].fanyi = result[i]
-                }
-            });
-
-            async.mapLimit(zhushi, 10, function (url, callback) {
-                superagent.get(url)
-                    .end(function (error, response) {
-                        if (error) {
-                            return next(error)
-                        }
-                        var $ = cheerio.load(response.text);
-                        var $element = $(response.text);
-                        callback(null, $(' span').text());
-                    })
-            }, function (err, result) {
-                for (var i = 0; i < result.length; i++) {
-                    items[i].zhushi = result[i]
-                }
-            });
-
-            async.mapLimit(shangxi, 10, function (url, callback) {
-                superagent.get(url)
-                    .end(function (error, response) {
-                        if (error) {
-                            return next(error)
-                        }
-                        var $ = cheerio.load(response.text);
-                        var $element = $(response.text);
-                        callback(null, $('p').text());
-                    })
-            }, function (err, result) {
-                for (var i = 0; i < result.length; i++) {
-                    items[i].shangxi = result[i]
-                }
-                res.send(items);
-            });
-        });
+    }
 });
 
 /**
@@ -113,7 +121,7 @@ router.get('/poem/type/list', function (req, res, next) {
                     type: $element.text()
                 })
             });
-            for (var i = 0; i< items.length; i++){
+            for (var i = 0; i < items.length; i++) {
                 Poem.insertPoemType(items[i]);
             }
             res.send(items);
@@ -131,7 +139,7 @@ router.get('/poem/author/list', function (req, res, next) {
             var $ = cheerio.load(sres.text);
             var items = [];
             console.log($('.right .sons').next().find('a').length)
-            $('.right .sons').slice(1,2).find('a').each(function (index, element) {
+            $('.right .sons').slice(1, 2).find('a').each(function (index, element) {
 
                 var $element = $(element);
                 items.push({
@@ -162,7 +170,7 @@ router.get('/poem/dynasty/list', function (req, res, next) {
                     dynasty: $element.text()
                 })
             });
-            for (var i = 0; i< items.length; i++){
+            for (var i = 0; i < items.length; i++) {
                 Poem.insertDynasty(items[i]);
             }
             res.send(items);
@@ -187,7 +195,7 @@ router.get('/poem/form/list', function (req, res, next) {
                     type: $element.text()
                 })
             })
-            for (var i = 0; i< items.length; i++){
+            for (var i = 0; i < items.length; i++) {
                 Poem.insertPoemForm(items[i]);
             }
             res.send(items);
@@ -197,38 +205,31 @@ router.get('/poem/form/list', function (req, res, next) {
  * 作者列表
  * */
 router.get('/author/list', function (req, res, next) {
-    superagent.get('https://so.gushiwen.org/authors/')
-        .end(function (err, sres) {
-            if (err) {
-                return next(err);
-            }
-            var $ = cheerio.load(sres.text);
-            var items = [];
-            $('.main3 .left .sonspic').each(function (index, element) {
+    for (var i = 1; i < 2; i++) {
+        superagent.get('https://so.gushiwen.org/authors/Default.aspx?p=' + i + '&c=')
+            .end(function (err, sres) {
+                if (err) {
+                    return next(err);
+                }
+                var $ = cheerio.load(sres.text);
+                var items = [];
+                $('.main3 .left .sonspic').each(function (index, element) {
 
-                var $element = $(element);
-                items.push({
-                    img: $element.find('.cont > .divimg > a > img').attr('src'),
-                    name: $element.find('p> a >b').text(),
-                    desc: $element.find('p').next().text(),
-                    star: $element.find('.tool > .good > a > span').text()
-                })
+                    var $element = $(element);
+                    items.push({
+                        img: $element.find('.cont > .divimg > a > img').attr('src') || null,
+                        name: $element.find('p> a >b').text(),
+                        desc: $element.find('p').next().text(),
+                        star: $element.find('.tool > .good > a > span').text()
+                    })
+                });
+                for (var j = 0; j < items.length; j++) {
+                    // Poem.insertAuthor(items[j])
+                }
+                // console.log(i);
+                res.send(items);
             });
-            for (var i = 0; i< items.length; i++){
-                Poem.findAuthorName(items[i], function (res) {
-                    // console.log(res)
-                    // if (res){
-                    //     console.log(1)
-                        Poem.insertAuthor(items[i])
-                    // } else {
-                    //     console.log(2)
-                    //     Poem.updateAuthor(items[i])
-                    // }
-                })
-            }
-
-            res.send(items);
-        });
+    }
 });
 
 /**

@@ -38,7 +38,21 @@ var AuthorSchema = new Schema({
     star : { type: String }
 });
 
+var PoemSchema = new Schema({
+    id : { type: String },
+    title : { type: String },
+    dynasty : { type: String },
+    author : { type: String },
+    content: {type: String},
+    tag: {type: String},
+    star: {type: Number},
+    fanyi : { type: String },
+    zhushi : { type: String },
+    shangxi : { type: String }
+});
+
 module.exports = mongoose.model('Dynasty',DynastySchema);
 module.exports = mongoose.model('PoemForm',PoemFormSchema);
 module.exports = mongoose.model('PoemType',PoemTypeSchema);
 module.exports = mongoose.model('Author',AuthorSchema);
+module.exports = mongoose.model('Poem',PoemSchema);
